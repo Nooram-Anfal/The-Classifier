@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>The Classifier — News Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IM+Fell+English:ital@0;1&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div class="masthead-top">
+      <div class="masthead-meta left">
+        <span id="liveDate"></span>
+        <span class="sep">|</span>
+        <span>Vol. I, No. 1</span>
+      </div>
+      <div class="masthead-title">
+        <div class="fraktur">The Classifier</div>
+        <div class="masthead-sub">News Intelligence &amp; Category Analysis Engine</div>
+      </div>
+      <div class="masthead-meta right">
+        <span>NLP · Bayesian · ML</span>
+        <span class="sep">|</span>
+        <span>Four Models</span>
+      </div>
+    </div>
+    <div class="rule-triple"></div>
+    <nav class="masthead-nav">
+      <button class="nav-btn active" data-tab="classify">
+        <i class="fa-solid fa-magnifying-glass"></i> Classify
+      </button>
+      <button class="nav-btn" data-tab="batch">
+        <i class="fa-solid fa-layer-group"></i> Batch
+      </button>
+      <button class="nav-btn" data-tab="evaluation">
+        <i class="fa-solid fa-chart-bar"></i> Evaluation
+      </button>
+      <button class="nav-btn" data-tab="about">
+        <i class="fa-solid fa-book-open"></i> Methodology
+      </button>
+    </nav>
+    <div class="rule-single"></div>
+  </header>
+
+  <!-- MODEL SELECTOR BAR -->
+  <div class="model-bar">
+    <span class="model-bar-label"><i class="fa-solid fa-brain"></i> Active Model</span>
+    <div class="model-pills" id="modelPills">
+      <button class="mpill active" data-key="naive_bayes">Naive Bayes</button>
+      <button class="mpill" data-key="logistic_regression">Logistic Regression</button>
+      <button class="mpill" data-key="linear_svc">Linear SVC</button>
+      <button class="mpill" data-key="sgd">SGD Classifier</button>
+    </div>
+    <span class="model-desc" id="modelDesc">Multinomial Naive Bayes. Fast, probabilistic, ideal for sparse TF-IDF features.</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TAB: CLASSIFY
+  ══════════════════════════════════════════ -->
+  <main class="tab-content active" id="tab-classify">
+    <div class="classify-grid">
+
+      <!-- LEFT: Input -->
+      <section class="column col-input">
+        <div class="col-header">
+          <span class="col-rule-left"></span>
+          <h2 class="col-title">
+            <i class="fa-solid fa-pen-nib"></i> Submit Article
+          </h2>
+          <span class="col-rule-right"></span>
+        </div>
+
+        <p class="col-lede">Enter a news headline or paragraph. The engine will analyse linguistic patterns and classify by category using the selected model.</p>
+
+        <div class="input-wrap">
+          <textarea id="newsInput" class="news-textarea"
+            placeholder="e.g. The central bank announced a 25 basis-point rate increase amid rising consumer prices..."
+            rows="7" maxlength="2000"></textarea>
+          <div class="char-counter"><span id="charCount">0</span> / 2000</div>
+        </div>
+
+        <div class="example-section">
+          <div class="example-label">— Dispatch Examples —</div>
+          <div class="example-grid">
+            <button class="eg-btn" data-text="NASA confirmed the discovery of water ice deposits at the lunar south pole, a major step forward for sustained human presence on the Moon.">
+              <i class="fa-solid fa-flask"></i> Sci/Tech
+            </button>
+            <button class="eg-btn" data-text="The Federal Reserve raised the federal funds rate by 25 basis points, signalling concern over persistent inflationary pressures in the US economy.">
+              <i class="fa-solid fa-building-columns"></i> Business
+            </button>
+            <button class="eg-btn" data-text="Argentina defeated France on penalties in a dramatic World Cup final, with Messi finally claiming the trophy that had eluded him throughout his career.">
+              <i class="fa-solid fa-trophy"></i> Sports
+            </button>
+            <button class="eg-btn" data-text="World leaders convened at the United Nations for emergency sessions following escalating military tensions in the disputed border region.">
+              <i class="fa-solid fa-earth-americas"></i> World
+            </button>
+          </div>
+        </div>
+
+        <button class="classify-btn" id="classifyBtn">
+          <i class="fa-solid fa-bolt"></i>
+          <span class="btn-text">Classify Article</span>
+          <div class="btn-spinner" id="btnSpinner"></div>
+        </button>
+
+        <div class="error-msg" id="errorMsg" style="display:none"></div>
+      </section>
+
+      <!-- DIVIDER -->
+      <div class="col-divider"><div class="vline"></div></div>
+
+      <!-- RIGHT: Result -->
+      <section class="column col-result" id="colResult">
+
+        <!-- Idle -->
+        <div class="idle-wrap" id="idleWrap">
+          <div class="idle-masthead">AWAITING DISPATCH</div>
+          <div class="idle-ornament">&#10070;</div>
+          <p class="idle-note">Classification verdict will appear here once an article is submitted for analysis.</p>
+          <div class="idle-cats">
+            <span><i class="fa-solid fa-earth-americas"></i> World</span>
+            <span><i class="fa-solid fa-trophy"></i> Sports</span>
+            <span><i class="fa-solid fa-building-columns"></i> Business</span>
+            <span><i class="fa-solid fa-flask"></i> Sci/Tech</span>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div class="result-wrap" id="resultWrap" style="display:none">
+          <div class="col-header">
+            <span class="col-rule-left"></span>
+            <h2 class="col-title"><i class="fa-solid fa-gavel"></i> Verdict</h2>
+            <span class="col-rule-right"></span>
+          </div>
+
+          <!-- Verdict banner -->
+          <div class="verdict-banner" id="verdictBanner">
+            <div class="verdict-kicker" id="verdictKicker">CLASSIFIED AS</div>
+            <div class="verdict-headline" id="verdictHeadline"></div>
+            <div class="verdict-byline" id="verdictByline"></div>
+          </div>
+
+          <!-- Confidence -->
+          <div class="metric-block">
+            <div class="metric-label">CONFIDENCE SCORE</div>
+            <div class="conf-row">
+              <div class="conf-bar-track">
+                <div class="conf-bar-fill" id="confFill"></div>
+              </div>
+              <div class="conf-pct" id="confPct">—</div>
+            </div>
+          </div>
+
+          <!-- All probs -->
+          <div class="metric-block">
+            <div class="metric-label">CATEGORY BREAKDOWN</div>
+            <div id="probRows"></div>
+          </div>
+
+          <!-- Keywords -->
+          <div class="metric-block">
+            <div class="metric-label">KEY TERMS <span class="metric-sub">(TF-IDF weighted)</span></div>
+            <div class="keyword-cloud" id="keywordCloud"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       TAB: BATCH
+  ══════════════════════════════════════════ -->
+  <main class="tab-content" id="tab-batch">
+    <div class="page-inner">
+      <div class="col-header centered">
+        <span class="col-rule-left"></span>
+        <h2 class="col-title"><i class="fa-solid fa-layer-group"></i> Batch Classification</h2>
+        <span class="col-rule-right"></span>
+      </div>
+      <p class="col-lede centered">Enter one news headline per line. Up to 50 articles. All will be classified using the active model.</p>
+
+      <div class="batch-layout">
+        <div class="batch-input-col">
+          <textarea id="batchInput" class="news-textarea batch-textarea"
+            placeholder="Enter one article per line:&#10;&#10;NASA discovers water on Mars surface&#10;Fed raises rates amid inflation fears&#10;Ronaldo scores hat-trick in final..."
+            rows="14" maxlength="10000"></textarea>
+          <div class="batch-actions">
+            <button class="classify-btn batch-btn" id="batchBtn">
+              <i class="fa-solid fa-bolt"></i>
+              <span class="btn-text">Classify All</span>
+              <div class="btn-spinner" id="batchSpinner"></div>
+            </button>
+            <button class="outline-btn" id="exportBtn" style="display:none">
+              <i class="fa-solid fa-file-arrow-down"></i> Export CSV
+            </button>
+          </div>
+          <div class="error-msg" id="batchError" style="display:none"></div>
+        </div>
+        <div class="batch-results-col" id="batchResults">
+          <div class="batch-idle">
+            <i class="fa-solid fa-layer-group batch-idle-icon"></i>
+            <p>Batch results will appear here.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       TAB: EVALUATION
+  ══════════════════════════════════════════ -->
+  <main class="tab-content" id="tab-evaluation">
+    <div class="page-inner">
+      <div class="col-header centered">
+        <span class="col-rule-left"></span>
+        <h2 class="col-title"><i class="fa-solid fa-chart-bar"></i> Model Evaluation</h2>
+        <span class="col-rule-right"></span>
+      </div>
+      <p class="col-lede centered">Performance metrics computed on a stratified 20% hold-out from the AG News test set. All models share the same TF-IDF vectoriser.</p>
+
+      <!-- Model comparison cards -->
+      <div class="eval-cards" id="evalCards"></div>
+
+      <!-- Accuracy chart -->
+      <div class="chart-section">
+        <div class="chart-title">ACCURACY COMPARISON</div>
+        <div class="acc-chart" id="accChart"></div>
+      </div>
+
+      <!-- Per-class metrics table -->
+      <div class="chart-section" id="perClassSection">
+        <div class="chart-title-row">
+          <div class="chart-title">PER-CLASS METRICS</div>
+          <select class="eval-model-select" id="evalModelSelect"></select>
+        </div>
+        <table class="metrics-table" id="metricsTable"></table>
+      </div>
+
+      <!-- Confusion matrix -->
+      <div class="chart-section" id="confMatSection">
+        <div class="chart-title">CONFUSION MATRIX</div>
+        <div class="cm-wrap" id="cmWrap"></div>
+      </div>
+
+      <!-- F1 bar chart per class per model -->
+      <div class="chart-section">
+        <div class="chart-title">F1-SCORE BY CATEGORY</div>
+        <div class="f1-chart" id="f1Chart"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       TAB: METHODOLOGY
+  ══════════════════════════════════════════ -->
+  <main class="tab-content" id="tab-about">
+    <div class="page-inner about-inner">
+      <div class="col-header centered">
+        <span class="col-rule-left"></span>
+        <h2 class="col-title"><i class="fa-solid fa-book-open"></i> Methodology</h2>
+        <span class="col-rule-right"></span>
+      </div>
+
+      <div class="about-grid">
+        <article class="about-card">
+          <div class="about-num">I</div>
+          <h3 class="about-card-title">Data Pipeline</h3>
+          <p>The AG News corpus provides 120,000 training and 7,600 test articles across four categories. Title and description fields are concatenated, lowercased, stripped of punctuation and digits, and filtered against a 130-term English stopword list. Tokens under three characters are discarded.</p>
+        </article>
+        <article class="about-card">
+          <div class="about-num">II</div>
+          <h3 class="about-card-title">TF-IDF Vectorisation</h3>
+          <p>Text is converted to a sparse numerical matrix using Term Frequency–Inverse Document Frequency weighting. The vectoriser retains 30,000 features, applies sublinear TF dampening (log(1+tf)), and extracts both unigrams and bigrams, capturing phrase-level signals such as "interest rate" or "world cup".</p>
+        </article>
+        <article class="about-card">
+          <div class="about-num">III</div>
+          <h3 class="about-card-title">Naive Bayes</h3>
+          <p>Multinomial Naive Bayes applies Bayes' theorem with a conditional independence assumption between features. Despite this simplification, NB is highly effective on high-dimensional sparse text data. Laplace smoothing (α=0.1) prevents zero-probability issues for unseen tokens.</p>
+        </article>
+        <article class="about-card">
+          <div class="about-num">IV</div>
+          <h3 class="about-card-title">Logistic Regression</h3>
+          <p>A linear classifier trained by maximising the log-likelihood of the multinomial distribution. L2 regularisation (C=5.0) prevents overfitting. LR produces well-calibrated probability scores, making it useful when confidence estimation matters. Solved via L-BFGS.</p>
+        </article>
+        <article class="about-card">
+          <div class="about-num">V</div>
+          <h3 class="about-card-title">Linear SVC</h3>
+          <p>Support Vector Classification with a linear kernel finds the maximum-margin hyperplane between classes. Unlike probabilistic models, SVC directly optimises classification margin. Platt scaling via cross-validated calibration wraps the classifier to produce probability estimates.</p>
+        </article>
+        <article class="about-card">
+          <div class="about-num">VI</div>
+          <h3 class="about-card-title">SGD Classifier</h3>
+          <p>Stochastic Gradient Descent with log-loss behaves identically to logistic regression but updates weights on individual samples. This makes it extremely fast and memory-efficient on large corpora. Calibrated with cross-validation for reliable probability output.</p>
+        </article>
+      </div>
+
+      <div class="pipeline-diagram">
+        <div class="pip-step"><i class="fa-solid fa-file-csv"></i><span>Raw CSV</span></div>
+        <div class="pip-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="pip-step"><i class="fa-solid fa-broom"></i><span>Preprocess</span></div>
+        <div class="pip-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="pip-step"><i class="fa-solid fa-table-cells"></i><span>TF-IDF</span></div>
+        <div class="pip-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="pip-step"><i class="fa-solid fa-brain"></i><span>Model</span></div>
+        <div class="pip-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="pip-step"><i class="fa-solid fa-tag"></i><span>Category</span></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="rule-triple"></div>
+    <div class="footer-inner">
+      <span>Built with Flask &amp; scikit-learn</span>
+      <span class="sep">&#10070;</span>
+      <span>AG News Dataset</span>
+      <span class="sep">&#10070;</span>
+      <span>TF-IDF + Four Classifiers</span>
+      <span class="sep">&#10070;</span>
+      <span>Natural Language Processing</span>
+    </div>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
