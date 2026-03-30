@@ -98,5 +98,55 @@ The goal was to make the system feel like a real news tool, not just a model dem
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
+
+
+project/
+│
+├── app.py
+├── model.py
+├── requirements.txt
+│
+├── models/
+├── templates/
+├── static/
+└── data/
+
+
+---
+
+## ▶️ How to Run
+
+```bash
+pip install -r requirements.txt
+python model.py
+python app.py
+````
+
+Then open:
+
+```
+http://localhost:5000
+```
+
+---
+
+## Why This Project Matters
+
+This project shows that:
+
+* Classical NLP methods are still highly effective
+* Multiple models provide better insight than a single one
+* A good interface turns a model into a usable tool
+
+---
+
+## Future Improvements
+
+* Add deep learning models (BERT, LSTM)
+* Integrate real-time news APIs
+* Deploy as a web application
+* Improve preprocessing with lemmatization
+
+---
